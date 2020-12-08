@@ -22,6 +22,14 @@ app.get("/", (req,res) => {
 
 });
 
+app.get("/urls.json", (req,res) => {
+
+  // format the response to be in JSON format using syntax below
+  // res.json, also calls res.send btw.
+  res.json(urlDatabase);
+
+});
+
 // Activate server, i.e setup server to start listening on port 8080
 
 app.listen(PORT, () => {
