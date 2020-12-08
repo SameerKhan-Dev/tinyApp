@@ -26,8 +26,13 @@ app.get("/urls.json", (req,res) => {
 
   // format the response to be in JSON format using syntax below
   // res.json, also calls res.send btw.
-  res.json(urlDatabase);
+  res.json(ur/lDatabase);
 
+});
+
+app.get("/hello", (req, res) => {
+  // when sending html it creates the browser creates the corresponding html rendering for us on the screen
+  res.send("<html><body>Hello <b>World</</body></html>\n");
 });
 
 // Activate server, i.e setup server to start listening on port 8080
