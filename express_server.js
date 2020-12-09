@@ -1,9 +1,35 @@
+/*
+  This function simulates generating a "unique" shortURL, we will implement
+  a function that returns a string of 6 random alphanumeric characters.
+*/
+function generateRandomString() {
+  // need to randomly generate 6 characters and string them together
+  let shortURL = "";
+  // list of all acceptables characters
+  let alphaNumericCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+  // generate six random characters and create shortURL
+  for(let x = 0; x < 6 ; x++) {  
+    
+    // generate random value representing the index inside alphaNumericCharacters
+    let randomIndex= Math.floor(Math.random()*(alphaNumericCharacters.length-1));
+    
+    // use the random index to obtain the character and append it to the shortURL string
+    shortURL += alphaNumericCharacters[randomIndex];
+    
+  }
+  return shortURL;
+}
 
 const express = require("express");
 
 const app = express();
 
+const bodyParser = require("body-parser");
+
 const PORT = 8080; // default port 8080
+
+app.use(bodyParser.urlencoded({extended: true}));
 
 app.set("view engine", "ejs");
 
@@ -20,7 +46,7 @@ const urlDatabase = {
 
 } 
 
-// ROUTING WITH SPECIFIC PATHS
+// ROUTING WITH SPECIFIC PATHSewLongURL = req.body.longURL;
 // .get is a built in function that we calling here and supplying the callback function (req,res) to it.
 app.get("/", (req,res) => {
 
@@ -41,9 +67,32 @@ app.get("/urls.json", (req,res) => {
 
 });
 
+
+app.get("/urls/new", (req, res) => {
+
+  // render the urls_new page on the browser as a response. Form is provided to user.
+  res.render('urls_new'); 
+
+});
+
+// receive a post request and access the data to post
+app.post('/urls', (req, res) => {
+
+  // body-parser formats the buffer (input data from form in post request) into a Javascript object
+  // where longURL is the key; we specified this key using the input attribute name. 
+  // The value is the content from the input field.
+  console.log(req.body);
+  res.send("Ok");
+  // access the request body which contains the input data as per ejs file template
+  //const newLongURL = req.body.longURL;
+  // const shortURL = generateRandomString();
+  //urlDatabase[shortURL] = newLongURL;
+
+});
+
 app.get("/urls", (req, res) => {
   
-  // res.render() takes two parameters. 
+  // res.render() takes two ,parameters. 
   // Param 1) is the ejs template file name (without the ejs extension) corresponding to the specific URL inside the views folder, 
   // Param 2) is the object representing the data we want to be accessible in our ejs template file. i.e..
   // i.e the keys inside the param 2 object are accessible inside the ejs file as variables.
