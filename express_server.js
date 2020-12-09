@@ -76,6 +76,7 @@ app.get("/urls/:shortURL", (req, res) => {
     // accessing the actual longURL
     longURL : urlDatabase[req.params.shortURL] 
   };
+  console.log(templateVars.longURL);
 
   // render the ejs template file into a html file
   res.render("urls_show", templateVars);
