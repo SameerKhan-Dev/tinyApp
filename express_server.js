@@ -65,6 +65,23 @@ app.get("/hello", (req, res) => {
   res.send("<html><body>Hello <b>World</</body></html>\n");
 });
 
+// any page in the urls page
+app.get("/urls/:shortURL", (req, res) => {
+
+  
+  const templateVars = { 
+    // over here the variable shortURL will be visible inside the HTML file
+    shortURL: req.params.shortURL,
+    // over here the variable longURL will be visible inside the HTML file
+    // accessing the actual longURL
+    longURL : urlDatabase[req.params.shortURL] 
+  };
+
+  // render the ejs template file into a html file
+  res.render("urls_show", templateVars);
+});
+
+
 // Activate server, i.e setup server to start listening on port 8080
 
 app.listen(PORT, () => {
