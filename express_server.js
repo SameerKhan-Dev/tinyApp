@@ -7,7 +7,11 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 
-// this object represents our database for now
+// this object represents our database for now 
+// this urlDatabase object will be used to keep track of all the URLS and their shortened forms
+// this is the data that we want to show on the URLS page.
+// therefore we need to pass along the urlDatabase to the template.
+
 const urlDatabase = {
 
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -23,12 +27,36 @@ app.get("/", (req,res) => {
   res.send("Hello!");
 
 });
+/*
+  The app. get() method specifies a callback function that will be invoked whenever there is an HTTP GET request
+  with a path ( '/' ) relative to the site root. The callback function takes a
+  request and a response object as arguments, and simply calls send() on the response
 
+*/
 app.get("/urls.json", (req,res) => {
 
   // format the response to be in JSON format using syntax below
   // res.json, also calls res.send btw.
   res.json(ur/lDatabase);
+
+});
+
+app.get("/urls", (req, res) => {
+  
+  // res.render() takes two parameters. 
+  // Param 1) is the ejs template file name (without the ejs extension) corresponding to the specific URL inside the views folder, 
+  // Param 2) is the object representing the data we want to be accessible in our ejs template file. i.e..
+  // i.e the keys inside the param 2 object are accessible inside the ejs file as variables.
+
+  /*  
+    When sending variables to an EJS template, we need to send them inside an object, 
+    even if we are only sending one variable. This is so we can use the key of that variable 
+    (in the above case the key is urls) to access the data within our template.
+  */
+  const templateVars = {urls: urlDatabase}
+ // console.log(templateVars.urls.b2xVn2);
+
+  res.render('urls_index', templateVars);
 
 });
 
