@@ -22,10 +22,11 @@ function generateRandomString() {
 }
 
 const express = require("express");
-
-const app = express();
-
 const bodyParser = require("body-parser");
+const app = express();
+//const ejsLint = require('ejs-lint');
+var cookieParser = require('cookie-parser');
+app.use(cookieParser());
 
 const PORT = 8080; // default port 8080
 
@@ -71,7 +72,10 @@ app.get("/urls.json", (req,res) => {
 app.get("/urls/new", (req, res) => {
 
   // render the urls_new page on the browser as a response. Form is provided to user.
-  res.render('urls_new'); 
+  const templateVars = {
+    username: req.cookies["username"]
+  };
+  res.render('urls_new', templateVars); 
 
 });
 
@@ -128,9 +132,36 @@ app.post("/urls/:shortURL", (req, res) => {
   res.redirect(`/urls/${shortURL}`);
 });
 
+// Route for Login
+app.post("/login", (req, res) => {
 
+  // access the req.body.username to get the value from the form and set it inside a cookie
 
+  const username = req.body.username;
+  console.log("HERE FAM");
+  // set cookie res.cookie('cookieName', value);
+  if(username){
+    res.cookie('username',username);
+  }
+  
 
+  // redirect back to the /urls page
+  res.redirect('/urls');
+
+});
+
+// Route for logout and to clear cookies
+
+app.post("/logout", (req,res) => {
+
+  // clear the cookies and redirect to the urls page
+  res.clearCookie("username");
+
+  console.log("Here fam!");
+  // redirect to the main urls page
+  res.redirect('/urls');
+
+});
 
 
 app.get("/urls", (req, res) => {
@@ -145,7 +176,13 @@ app.get("/urls", (req, res) => {
     even if we are only sending one variable. This is so we can use the key of that variable 
     (in the above case the key is urls) to access the data within our template.
   */
-  const templateVars = {urls: urlDatabase}
+
+  //const usernameValue = req.cookies;
+  console.log("req.cookies are:", req.cookies);
+  const templateVars = {
+    urls: urlDatabase,
+    username: req.cookies["username"]
+  }
  // console.log(templateVars.urls.b2xVn2);
 
   res.render('urls_index', templateVars);
@@ -174,7 +211,9 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     // over here the variable longURL will be visible inside the HTML file
     // accessing the actual longURL
-    longURL : urlDatabase[req.params.shortURL] 
+    longURL : urlDatabase[req.params.shortURL],
+    // access the username if it exists as a cookie
+    username: req.cookies["username"]
   };
   //console.log("urlDatabase is: ", urlDatabase);
   //console.log("req.params.shortURL is:", req.params.shortURL);
