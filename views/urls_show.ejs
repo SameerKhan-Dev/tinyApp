@@ -15,9 +15,30 @@
         <h5 class="card-title">TinyURL for: <%= longURL %></h5>
         <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
        <!-- <a href='#''>Shorten a new URL!</a> -->
+       <!--
+          We start by extending the urls_show.ejs template to include a form with two elements – a text input and a button.
+          the form will submit using a POST request.
+          Add a form to the urls_show template that submits an updated long URL
+       -->
+      
+      
+        
       </div>
     <div class="card-footer text-muted"></div>
   </div>
+  <h1 style="text-align: center">Edit</h1>
+  <div class = "form d-flex div-wrapper" style ="text-align: center"> 
+    
+    <form class="form-inline" style = "text-align: center; padding-left: 20px" action="/urls/<%= shortURL %>" method="POST" style=>
+      <div class="form-group mb-2 center" style = "text-align: center">
+        <div class = "row justify-content-center">
+          <label for="newURL">New URL:</label>
+          <input class="form-control" type="text" name="newURL" placeholder="http://" style="width: 300px; margin: 1em">
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+      </div>
+    </form>
+   </div>
   <!-- Bootstrap JS -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>

@@ -112,7 +112,21 @@ app.post("/urls/:shortURL/delete", (req , res) => {
   */
 });
 
+app.post("/urls/:shortURL", (req, res) => {
 
+  //get the short URL from the request body
+  const shortURL = req.params.shortURL;
+
+  //get the new long URL from the request body
+  const newLongURL = req.body.newURL;
+
+  // update database long URL
+  urlDatabase[shortURL] = newLongURL;
+  //console.log("newLongURL is: " , newLongURL);
+  //console.log("shortURL is ", shortURL);
+  // redirect to the url show page to display the updated url info
+  res.redirect(`/urls/${shortURL}`);
+});
 
 
 
@@ -151,6 +165,7 @@ app.get("/u/:shortURL", (req, res) => {
   // redirect using longURL
   res.redirect(longURL);
 });
+
 // any page in the urls page
 app.get("/urls/:shortURL", (req, res) => {
   //console.log("inside app.get urls/:shortURL....");

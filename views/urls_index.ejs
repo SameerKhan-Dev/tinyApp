@@ -22,6 +22,7 @@
         <tr>
           <th scope="col">Short URL</th>
           <th scope="col">Long URL</th>
+          <th scope="col">Edit</th>
           <th scope="col">Delete</th>
         </tr>
       </thead>
@@ -30,6 +31,14 @@
           <tr>
             <td><%= url %></td>
             <td><%= urls[url] %></td>
+            <td>
+              <form class="form-inline" action='/urls/<%= url%>' method="GET">
+                <div class="form-group mb-2">
+                  <!--<input class="form-control" type="text" name="longURL" placeholder="delete" style="width: 300px; margin: 1em">-->
+                  <button type="submit" class="btn btn-primary">Edit</button>
+                </div>
+              </form>
+            </td>
             <td>    
             <!--<form method="POST" action= `/urls/${url}/delete`> -->
 
