@@ -63,7 +63,7 @@ app.get("/urls.json", (req,res) => {
 
   // format the response to be in JSON format using syntax below
   // res.json, also calls res.send btw.
-  res.json(ur/lDatabase);
+  res.json(urlDatabase);
 
 });
 
@@ -81,13 +81,19 @@ app.post('/urls', (req, res) => {
   // body-parser formats the buffer (input data from form in post request) into a Javascript object
   // where longURL is the key; we specified this key using the input attribute name. 
   // The value is the content from the input field.
-  console.log(req.body);
-  res.send("Ok");
+  // console.log(req.body);
+  //res.send("Ok");
   // access the request body which contains the input data as per ejs file template
-  //const newLongURL = req.body.longURL;
-  // const shortURL = generateRandomString();
-  //urlDatabase[shortURL] = newLongURL;
+  const newLongURL = req.body.longURL;
+  const shortURL = generateRandomString();
+  // add the new key-value pair to the urlDatabase object
+  urlDatabase[shortURL] = newLongURL;
+  // redirect to
+  //add status code 302
+  res.status(302); 
+  res.redirect(`/urls/${shortURL}`);
 
+  
 });
 
 app.get("/urls", (req, res) => {
@@ -113,11 +119,18 @@ app.get("/hello", (req, res) => {
   // when sending html it creates the browser creates the corresponding html rendering for us on the screen
   res.send("<html><body>Hello <b>World</</body></html>\n");
 });
-
+// redirecting short URLS to long URL versions
+app.get("/u/:shortURL", (req, res) => {
+  // 
+  // using the shortURL in the request, extract the longURL from the urlsDatabase object
+  const shortURLID = req.params.shortURL;
+  const longURL = urlDatabase[shortURLID];
+  // redirect using longURL
+  res.redirect(longURL);
+});
 // any page in the urls page
 app.get("/urls/:shortURL", (req, res) => {
-
-  
+  //console.log("inside app.get urls/:shortURL....");
   const templateVars = { 
     // over here the variable shortURL will be visible inside the HTML file
     shortURL: req.params.shortURL,
@@ -125,7 +138,10 @@ app.get("/urls/:shortURL", (req, res) => {
     // accessing the actual longURL
     longURL : urlDatabase[req.params.shortURL] 
   };
-  console.log(templateVars.longURL);
+  //console.log("urlDatabase is: ", urlDatabase);
+  //console.log("req.params.shortURL is:", req.params.shortURL);
+  //console.log("templateVars is:", templateVars);
+  //console.log(templateVars.longURL);
 
   // render the ejs template file into a html file
   res.render("urls_show", templateVars);
