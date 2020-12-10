@@ -2,14 +2,14 @@
   This function simulates generating a "unique" shortURL, we will implement
   a function that returns a string of 6 random alphanumeric characters.
 */
-function generateRandomString() {
-  // need to randomly generate 6 characters and string them together
+function generateRandomString(stringLength) {
+  // need to randomly generate characters and string them together
   let shortURL = "";
   // list of all acceptables characters
   let alphaNumericCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
   
   // generate six random characters and create shortURL
-  for(let x = 0; x < 6 ; x++) {  
+  for(let x = 0; x < stringLength ; x++) {  
     
     // generate random value representing the index inside alphaNumericCharacters
     let randomIndex= Math.floor(Math.random()*(alphaNumericCharacters.length-1));
@@ -27,7 +27,7 @@ const app = express();
 //const ejsLint = require('ejs-lint');
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
-
+//const uuid = require('uuid/v8.3.2');
 const PORT = 8080; // default port 8080
 
 app.use(bodyParser.urlencoded({extended: true}));
@@ -46,6 +46,10 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 
 } 
+// database of users
+const users = {
+
+}
 
 // ROUTING WITH SPECIFIC PATHSewLongURL = req.body.longURL;
 // .get is a built in function that we calling here and supplying the callback function (req,res) to it.
@@ -89,7 +93,7 @@ app.post('/urls', (req, res) => {
   //res.send("Ok");
   // access the request body which contains the input data as per ejs file template
   const newLongURL = req.body.longURL;
-  const shortURL = generateRandomString();
+  const shortURL = generateRandomString(6);
   // add the new key-value pair to the urlDatabase object
   urlDatabase[shortURL] = newLongURL;
   // redirect to
@@ -135,10 +139,10 @@ app.post("/urls/:shortURL", (req, res) => {
 // Route for Login
 app.post("/login", (req, res) => {
 
-  // access the req.body.username to get the value from the form and set it inside a cookie
+  // access the req.body.username to get tgghe value from the form and set it inside a cookie
 
   const username = req.body.username;
-  console.log("HERE FAM");
+  
   // set cookie res.cookie('cookieName', value);
   if(username){
     res.cookie('username',username);
@@ -157,12 +161,53 @@ app.post("/logout", (req,res) => {
   // clear the cookies and redirect to the urls page
   res.clearCookie("username");
 
-  console.log("Here fam!");
+ 
   // redirect to the main urls page
   res.redirect('/urls');
 
 });
 
+// New user registration post request
+app.post("/register", (req, res) => {
+
+ 
+
+  // generate a random id and assign value to the id-key
+  const userId = generateRandomString(8);
+  
+  // create object to store user's email and password values using the req.body values for input from ejs template
+  const userEmail = req.body.email;
+  const userPw = req.body.password;
+  const newUser = {
+    id: userId,
+    email: userEmail,
+    password: userPw
+  }
+   // add new user object to the global users object
+users[userId] = newUser;
+
+// test print users
+console.log(users);
+
+  // after adding the user, set a user_id cookie containing the user's newly generated ID
+  res.cookie("user_id", userId);
+ 
+  // redirect to the /urls page
+  res.redirect("/urls");
+});
+
+// Get registration page
+app.get("/register", (req, res) => {
+
+  //render the corresponding registration ejs template : urls_registration
+
+  const templateVars = { 
+    // access the username if it exists as a cookie
+    username: req.cookies["username"]
+  };
+  
+  res.render("urls_registration", templateVars);
+});
 
 app.get("/urls", (req, res) => {
   
