@@ -96,6 +96,29 @@ app.post('/urls', (req, res) => {
   
 });
 
+// Post route that removes a URL resource
+app.post("/urls/:shortURL/delete", (req , res) => {
+
+  // use Javascript's delete operator that removes a property from an object
+  const shortURLID = req.params.shortURL;
+
+  // delete URL resource from database
+  delete urlDatabase[shortURLID];
+
+  res.redirect("/urls");
+  /*
+  console.log("shortURLID deleted:", shortURLID);
+  console.log("Resulting URL Database is: ", urlDatabase);
+  */
+});
+
+
+
+
+
+
+
+
 app.get("/urls", (req, res) => {
   
   // res.render() takes two ,parameters. 
