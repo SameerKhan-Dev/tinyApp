@@ -1,40 +1,4 @@
-/*
-  This function simulates generating a "unique" shortURL, we will implement
-  a function that returns a string of 6 random alphanumeric characters.
-*/
-function generateRandomString(stringLength) {
-  // need to randomly generate characters and string them together
-  let shortURL = "";
-  // list of all acceptables characters
-  let alphaNumericCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  
-  // generate six random characters and create shortURL
-  for(let x = 0; x < stringLength ; x++) {  
-    
-    // generate random value representing the index inside alphaNumericCharacters
-    let randomIndex= Math.floor(Math.random()*(alphaNumericCharacters.length-1));
-    
-    // use the random index to obtain the character and append it to the shortURL string
-    shortURL += alphaNumericCharacters[randomIndex];
-    
-  }
-  return shortURL;
-}
-
-const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
-//const ejsLint = require('ejs-lint');
-var cookieParser = require('cookie-parser');
-app.use(cookieParser());
-//const uuid = require('uuid/v8.3.2');
-const PORT = 8080; // default port 8080
-
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.set("view engine", "ejs");
-
-// this object represents our database for now 
+// this object represents our database for now
 // this urlDatabase object will be used to keep track of all the URLS and their shortened forms
 // this is the data that we want to show on the URLS page.
 // therefore we need to pass along the urlDatabase to the template.
@@ -45,11 +9,63 @@ const urlDatabase = {
 
   "9sm5xK": "http://www.google.com"
 
-} 
+};
 // database of users
 const users = {
 
+};
+/*
+  This function simulates generating a "unique" shortURL, we will implement
+  a function that returns a string of 6 random alphanumeric characters.
+*/
+const generateRandomString = function (stringLength) {
+  // need to randomly generate characters and string them together
+  let shortURL = "";
+  // list of all acceptables characters
+  let alphaNumericCharacters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  
+  // generate six random characters and create shortURL
+  for (let x = 0; x < stringLength; x++) {
+    
+    // generate random value representing the index inside alphaNumericCharacters
+    let randomIndex = Math.floor(Math.random() * (alphaNumericCharacters.length - 1));
+    
+    // use the random index to obtain the character and append it to the shortURL string
+    shortURL += alphaNumericCharacters[randomIndex];
+    
+  }
+  return shortURL;
 }
+
+// this function checks to see if the email submitted in registration form is valid or not
+// email is not valid if the email already exists and/or the email string is undefined or empty
+// if valid email, return true, else return false
+const emailChecker = function(email) {
+  let validEmail = true;
+  if (email === "") {
+    validEmail = false;
+  }
+  for (let userId in users) {
+    if (users[userId].email === email) {
+      validEmail = false;
+    }
+  }
+  return validEmail;
+};
+const express = require("express");
+const bodyParser = require("body-parser");
+const app = express();
+//const ejsLint = require('ejs-lint');
+let cookieParser = require('cookie-parser');
+app.use(cookieParser());
+//const uuid = require('uuid/v8.3.2');
+const PORT = 8080; // default port 8080
+
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.set("view engine", "ejs");
+
+
 
 // ROUTING WITH SPECIFIC PATHSewLongURL = req.body.longURL;
 // .get is a built in function that we calling here and supplying the callback function (req,res) to it.
@@ -80,21 +96,21 @@ app.get("/urls/new", (req, res) => {
   let templateVars = {};
   // if the user id exists then we send the actual user object to the ejs template
   // else we send undefined
-  if(user_id){
+  if (user_id) {
     templateVars = {
       user: users[user_id]
-    }
+    };
 
   } else {
 
     templateVars = {
-    user: undefined
-    }
+      user: undefined
+    };
   }
   console.log("templateVars inside get --> /urls/new is", templateVars);
   // templateVars is the object itself -- inside it the object: user_id has keys id:, email:, password.
   // inside ejs file can directly access id, email, password;
-  res.render('urls_new', templateVars); 
+  res.render('urls_new', templateVars);
   
 });
 
@@ -102,7 +118,7 @@ app.get("/urls/new", (req, res) => {
 app.post('/urls', (req, res) => {
 
   // body-parser formats the buffer (input data from form in post request) into a Javascript object
-  // where longURL is the key; we specified this key using the input attribute name. 
+  // where longURL is the key; we specified this key using the input attribute name.
   // The value is the content from the input field.
   // console.log(req.body);
   //res.send("Ok");
@@ -113,7 +129,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[shortURL] = newLongURL;
   // redirect to
   //add status code 302
-  res.status(302); 
+  res.status(302);
   res.redirect(`/urls/${shortURL}`);
 
   
@@ -160,20 +176,19 @@ app.post("/login", (req, res) => {
   let userExists = false;
   // set cookie res.cookes.cookie("user_id", newUser.id);
  
-  for (let user in users){
+  for (let user in users) {
     // user is same as user.id because its the literal string value
     // check if user already exists in the database, and get the value of it userID
-    if(users[user].email === email){
+    if (users[user].email === email) {
       res.cookie('user_id', user);
       userExists = true;
       break;
     }
   }
-  if(userExists){
-     // redirect back to the /urls page
+  if (userExists) {
+    // redirect back to the /urls page
     res.redirect('/urls');
   } else {
-
     res.redirect('/register');
   }
  
@@ -196,31 +211,38 @@ app.post("/logout", (req,res) => {
 // New user registration post request
 app.post("/register", (req, res) => {
 
- 
-
-  // generate a random id and assign value to the id-key
-  const userId = generateRandomString(8);
+  // check if email is valid if its not send a 404 status code error
+  let isValidEmail = emailChecker(req.body.email);
+  if (isValidEmail === false) {
+    console.log("users Object now is",users);
+    res.status(400).send("<h1>Status Error Code: 400 Bad Request. Email is already in use or an empty email address was submitted</h1>");
+  } else if (req.body.password === "") {
+    console.log("users Object now is",users);
+    res.status(400).send("<h1>Status Error Code: 400 Bad Request. Password can not be empty, must be filled out.</h1>");
+  } else {
+    const userId = generateRandomString(8);
   
-  // create object to store user's email and password values using the req.body values for input from ejs template
-  const userEmail = req.body.email;
-  const userPw = req.body.password;
-  const newUser = {
-    id: userId,
-    email: userEmail,
-    password: userPw
+    // create object to store user's email and password values using the req.body values for input from ejs template
+    const userEmail = req.body.email;
+    const userPw = req.body.password;
+    const newUser = {
+      id: userId,
+      email: userEmail,
+      password: userPw
+    };
+    // add new user object to the global users object
+    users[userId] = newUser;
+   
+    // test print users
+    console.log(users);
+  
+    // after adding the user, set a user_id cookie containing the user's newly generated ID
+    res.cookie("user_id", newUser.id);
+    
+    // redirect to the /urls page
+    res.redirect("/urls");
   }
-   // add new user object to the global users object
-users[userId] = newUser;
 
- 
-// test print users
-console.log(users);
-
-  // after adding the user, set a user_id cookie containing the user's newly generated ID
-  res.cookie("user_id", newUser.id);
- 
-  // redirect to the /urls page
-  res.redirect("/urls");
 });
 
 // Get registration page
@@ -228,7 +250,7 @@ app.get("/register", (req, res) => {
 
   //render the corresponding registration ejs template : urls_registration
 
-  const templateVars = { 
+  const templateVars = {
     // access the username if it exists as a cookie
     user: undefined //users[req.cookies["user_id"]]
   };
@@ -238,14 +260,14 @@ app.get("/register", (req, res) => {
 
 app.get("/urls", (req, res) => {
   
-  // res.render() takes two ,parameters. 
-  // Param 1) is the ejs template file name (without the ejs extension) corresponding to the specific URL inside the views folder, 
+  // res.render() takes two ,parameters.
+  // Param 1) is the ejs template file name (without the ejs extension) corresponding to the specific URL inside the views folder,
   // Param 2) is the object representing the data we want to be accessible in our ejs template file. i.e..
   // i.e the keys inside the param 2 object are accessible inside the ejs file as variables.
 
-  /*  
-    When sending variables to an EJS template, we need to send them inside an object, 
-    even if we are only sending one variable. This is so we can use the key of that variable 
+  /*
+    When sending variables to an EJS template, we need to send them inside an object,
+    even if we are only sending one variable. This is so we can use the key of that variable
     (in the above case the key is urls) to access the data within our template.
   */
   const userId = req.cookies['user_id'];
@@ -257,16 +279,16 @@ app.get("/urls", (req, res) => {
 
       urls: urlDatabase,
       user: users[userId]
-    }
+    };
 
   } else {
-      templateVars = {
+    templateVars = {
       urls: urlDatabase,
       user: undefined //users[userId]
-    }
+    };
   }
  
- // console.log(templateVars.urls.b2xVn2);
+  // console.log(templateVars.urls.b2xVn2);
 
   res.render('urls_index', templateVars);
 
@@ -278,7 +300,7 @@ app.get("/hello", (req, res) => {
 });
 // redirecting short URLS to long URL versions
 app.get("/u/:shortURL", (req, res) => {
-  // 
+  //
   // using the shortURL in the request, extract the longURL from the urlsDatabase object
   const shortURLID = req.params.shortURL;
   const longURL = urlDatabase[shortURLID];
@@ -292,13 +314,13 @@ app.get("/urls/:shortURL", (req, res) => {
 
   let user_id = req.cookies["user_id"];
   let userObject;
-  if(user_id){
+  if (user_id) {
     userObject = users[user_id];
   } else {
     userObject = undefined;
   }
   
-  const templateVars = { 
+  const templateVars = {
     // over here the variable shortURL will be visible inside the HTML file
     shortURL: req.params.shortURL,
     // over here the variable longURL will be visible inside the HTML file
