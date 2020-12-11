@@ -10,7 +10,7 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 
 };
-// database of users
+// database of users intialize it to be empty
 const users = {
 
 };
@@ -113,6 +113,23 @@ app.get("/urls/new", (req, res) => {
   res.render('urls_new', templateVars);
   
 });
+
+// receive a request to go to upload login page for rendering
+app.get("/login", (req, res) => {
+  const templateVars = {
+    // access the username if it exists as a cookie
+    user: undefined //users[req.cookies["user_id"]]
+  };
+  res.clearCookie("user_id");
+  // render the login page
+  res.render('urls_loginPage.ejs',templateVars);
+
+});
+
+
+
+
+
 
 // receive a post request and access the data to post
 app.post('/urls', (req, res) => {
