@@ -75,12 +75,27 @@ app.get("/urls.json", (req,res) => {
 
 app.get("/urls/new", (req, res) => {
 
+  const user_id = req.cookies["user_id"];
   // render the urls_new page on the browser as a response. Form is provided to user.
-  const templateVars = {
-    username: req.cookies["username"]
-  };
-  res.render('urls_new', templateVars); 
+  let templateVars = {};
+  // if the user id exists then we send the actual user object to the ejs template
+  // else we send undefined
+  if(user_id){
+    templateVars = {
+      user: users[user_id]
+    }
 
+  } else {
+
+    templateVars = {
+    user: undefined
+    }
+  }
+  console.log("templateVars inside get --> /urls/new is", templateVars);
+  // templateVars is the object itself -- inside it the object: user_id has keys id:, email:, password.
+  // inside ejs file can directly access id, email, password;
+  res.render('urls_new', templateVars); 
+  
 });
 
 // receive a post request and access the data to post
@@ -139,18 +154,29 @@ app.post("/urls/:shortURL", (req, res) => {
 // Route for Login
 app.post("/login", (req, res) => {
 
-  // access the req.body.username to get tgghe value from the form and set it inside a cookie
+  // access the req.body.username to get the value from the form and set it inside a cookie
 
-  const username = req.body.username;
-  
-  // set cookie res.cookie('cookieName', value);
-  if(username){
-    res.cookie('username',username);
+  const email = req.body.email;
+  let userExists = false;
+  // set cookie res.cookes.cookie("user_id", newUser.id);
+ 
+  for (let user in users){
+    // user is same as user.id because its the literal string value
+    // check if user already exists in the database, and get the value of it userID
+    if(users[user].email === email){
+      res.cookie('user_id', user);
+      userExists = true;
+      break;
+    }
   }
-  
+  if(userExists){
+     // redirect back to the /urls page
+    res.redirect('/urls');
+  } else {
 
-  // redirect back to the /urls page
-  res.redirect('/urls');
+    res.redirect('/register');
+  }
+ 
 
 });
 
@@ -159,7 +185,7 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req,res) => {
 
   // clear the cookies and redirect to the urls page
-  res.clearCookie("username");
+  res.clearCookie("user_id");
 
  
   // redirect to the main urls page
@@ -186,11 +212,12 @@ app.post("/register", (req, res) => {
    // add new user object to the global users object
 users[userId] = newUser;
 
+ 
 // test print users
 console.log(users);
 
   // after adding the user, set a user_id cookie containing the user's newly generated ID
-  res.cookie("user_id", userId);
+  res.cookie("user_id", newUser.id);
  
   // redirect to the /urls page
   res.redirect("/urls");
@@ -203,7 +230,7 @@ app.get("/register", (req, res) => {
 
   const templateVars = { 
     // access the username if it exists as a cookie
-    username: req.cookies["username"]
+    user: undefined //users[req.cookies["user_id"]]
   };
   
   res.render("urls_registration", templateVars);
@@ -221,13 +248,24 @@ app.get("/urls", (req, res) => {
     even if we are only sending one variable. This is so we can use the key of that variable 
     (in the above case the key is urls) to access the data within our template.
   */
-
+  const userId = req.cookies['user_id'];
   //const usernameValue = req.cookies;
+  let templateVars = {};
   console.log("req.cookies are:", req.cookies);
-  const templateVars = {
-    urls: urlDatabase,
-    username: req.cookies["username"]
+  if (userId) {
+    templateVars = {
+
+      urls: urlDatabase,
+      user: users[userId]
+    }
+
+  } else {
+      templateVars = {
+      urls: urlDatabase,
+      user: undefined //users[userId]
+    }
   }
+ 
  // console.log(templateVars.urls.b2xVn2);
 
   res.render('urls_index', templateVars);
@@ -251,6 +289,15 @@ app.get("/u/:shortURL", (req, res) => {
 // any page in the urls page
 app.get("/urls/:shortURL", (req, res) => {
   //console.log("inside app.get urls/:shortURL....");
+
+  let user_id = req.cookies["user_id"];
+  let userObject;
+  if(user_id){
+    userObject = users[user_id];
+  } else {
+    userObject = undefined;
+  }
+  
   const templateVars = { 
     // over here the variable shortURL will be visible inside the HTML file
     shortURL: req.params.shortURL,
@@ -258,7 +305,7 @@ app.get("/urls/:shortURL", (req, res) => {
     // accessing the actual longURL
     longURL : urlDatabase[req.params.shortURL],
     // access the username if it exists as a cookie
-    username: req.cookies["username"]
+    user: userObject // users[req.cookies["user_id"]]
   };
   //console.log("urlDatabase is: ", urlDatabase);
   //console.log("req.params.shortURL is:", req.params.shortURL);
