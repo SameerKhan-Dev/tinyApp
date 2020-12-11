@@ -15,11 +15,13 @@
     <%- include('partials/_header') %>
 
     <main style="margin: 1em;">
-      <h3>Login Page</h3>
+      <h3><b>Login</b></h3><br>
       <form action = "/login" method = "POST">
-        <input name = "email" type = "email" placeholder = "email@email.com">
-        <input name = "password" type = "password" placeholder = "password">
-        <button type = "submit">Login!</button>
+        <label name = "email">Email address</label><br>
+        <input name = "email" type = "email" placeholder = "email@email.com"><br>
+        <label style = "margin-top: 15px" name = "password">Password</label><br>
+        <input name = "password" type = "password" placeholder = "password"><br>
+        <button style = "background: blue; color: white; margin-top: 30px" type = "submit">Login</button>
       </form>
     </main>
       <!-- Bootstrap JS -->

@@ -43,15 +43,36 @@ const generateRandomString = function (stringLength) {
 const emailChecker = function(email) {
   let validEmail = true;
   if (email === "") {
-    validEmail = false;
-  }
-  for (let userId in users) {
-    if (users[userId].email === email) {
       validEmail = false;
-    }
+      return validEmail;
+  }
+  
+  let foundObject = emailFinder(email);
+  console.log("foundObject is ", foundObject);
+  if (typeof foundObject === "undefined"){
+    validEmail = true;
+  } else {
+    validEmail = false;
   }
   return validEmail;
 };
+
+// returns empty object if email not found in users database
+// if email match found, returns the object
+const emailFinder = function(email){
+  
+  for (let userId in users) {
+    // email match found return the user object
+    if (users[userId].email === email) {
+      return users[userId];
+    }
+  }
+  // email not found
+  return undefined;
+
+}
+
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
@@ -188,7 +209,35 @@ app.post("/urls/:shortURL", (req, res) => {
 app.post("/login", (req, res) => {
 
   // access the req.body.username to get the value from the form and set it inside a cookie
+  // check if email is valid if its not send a 404 status code error
+    let isValidEmail = emailChecker(req.body.email);
 
+    const email = req.body.email;
+    const password = req.body.password;
+    const userObject = emailFinder(email);
+    // if email is an empty string 
+    if (email === ""){
+      res.status(403).send("<h1>Status Error Code: 403 . Empty email address was submitted</h1>");
+    } else if (typeof userObject === "undefined"){
+      // if email was not found userObject would be type undefined as returned by the emailFinder function
+      res.status(403).send("<h1>Status Error Code: 403 . Email Address is not found!</h1>");
+    } else {
+      // email is valid and now need to check if passwords match (i.e what was entered vs. what was inside the database).
+
+      if(userObject.password === password){
+        // password is valid, and both conditions (email + password have been met). 
+        // set the cookie to be user_id
+        res.cookie('user_id', userObject.id);
+        // redirect to urls page
+        res.redirect('/urls');
+      } else {
+        // passwords do not match send a 403 error
+        res.status(403).send("<h1>Status Error Code: 403. Passwords do not match!</h1>");
+
+      }
+      
+    }
+  /*
   const email = req.body.email;
   let userExists = false;
   // set cookie res.cookes.cookie("user_id", newUser.id);
@@ -209,7 +258,7 @@ app.post("/login", (req, res) => {
     res.redirect('/register');
   }
  
-
+  */
 });
 
 // Route for logout and to clear cookies
@@ -227,7 +276,7 @@ app.post("/logout", (req,res) => {
 
 // New user registration post request
 app.post("/register", (req, res) => {
-
+  console.log(users);
   // check if email is valid if its not send a 404 status code error
   let isValidEmail = emailChecker(req.body.email);
   if (isValidEmail === false) {
