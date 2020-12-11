@@ -109,7 +109,7 @@ app.get("/urls.json", (req,res) => {
 
 });
 
-
+// provide form to shorten a new url
 app.get("/urls/new", (req, res) => {
 
   const user_id = req.cookies["user_id"];
@@ -121,17 +121,22 @@ app.get("/urls/new", (req, res) => {
     templateVars = {
       user: users[user_id]
     };
+    // templateVars is the object itself -- inside it the object: user_id has keys id:, email:, password.
+  // inside ejs file can directly access id, email, password;
+  console.log("you have access because you are logged in!");
+  res.render('urls_new', templateVars);
 
   } else {
 
     templateVars = {
       user: undefined
     };
+    // redirect to login page
+    console.log("you do not have access because you are not logged in, please login");
+    res.render('urls_loginPage', templateVars);
   }
-  console.log("templateVars inside get --> /urls/new is", templateVars);
-  // templateVars is the object itself -- inside it the object: user_id has keys id:, email:, password.
-  // inside ejs file can directly access id, email, password;
-  res.render('urls_new', templateVars);
+  //console.log("templateVars inside get --> /urls/new is", templateVars);
+ 
   
 });
 
