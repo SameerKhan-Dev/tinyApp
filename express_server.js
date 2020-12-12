@@ -73,6 +73,22 @@ const emailFinder = function(email){
 }
 
 
+// This function returns all the urls where the userID is equal to the id of the currently logged-in user in an object format
+// resultsObj = { shortURL1: longURL1, shortURL2 : longURL2 .....} 
+const urlsForUser = function (id) {
+  let resultsObj = {};
+  console.log("id is: ",id);
+  for (let url in urlDatabase){
+    console.log("urlDatabase is :", urlDatabase);
+    if(urlDatabase[url]["userID"] === id){
+      
+      resultsObj[url]= urlDatabase[url];
+      
+    }
+  }
+  return resultsObj;
+};
+
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
@@ -226,13 +242,14 @@ app.post("/urls/:shortURL", (req, res) => {
 // Route for Login
 app.post("/login", (req, res) => {
 
-  // access the req.body.username to get the value from the form and set it inside a cookie
+    // access the req.body.username to get the value from the form and set it inside a cookie
   // check if email is valid if its not send a 404 status code error
-    let isValidEmail = emailChecker(req.body.email);
+  let isValidEmail = emailChecker(req.body.email);
 
-    const email = req.body.email;
-    const password = req.body.password;
-    const userObject = emailFinder(email);
+  const email = req.body.email;
+  const password = req.body.password;
+  const userObject = emailFinder(email);
+  
     // if email is an empty string 
     if (email === ""){
       res.status(403).send("<h1>Status Error Code: 403 . Empty email address was submitted</h1>");
@@ -272,7 +289,7 @@ app.post("/login", (req, res) => {
   if (userExists) {
     // redirect back to the /urls page
     res.redirect('/urls');
-  } else {
+  } else {res.render('urls_index', templateVars);
     res.redirect('/register');
   }
  
@@ -297,7 +314,7 @@ app.post("/register", (req, res) => {
   console.log(users);
   // check if email is valid if its not send a 404 status code error
   let isValidEmail = emailChecker(req.body.email);
-  if (isValidEmail === false) {
+  if (isValidEmail === false){ 
     console.log("users Object now is",users);
     res.status(400).send("<h1>Status Error Code: 400 Bad Request. Email is already in use or an empty email address was submitted</h1>");
   } else if (req.body.password === "") {
@@ -357,25 +374,27 @@ app.get("/urls", (req, res) => {
   const userId = req.cookies['user_id'];
   //const usernameValue = req.cookies;
   let templateVars = {};
+  
   console.log("req.cookies are:", req.cookies);
   if (userId) {
+    let urlsObject = urlsForUser(userId);
     templateVars = {
 
-      urls: urlDatabase,
+      urls: urlsObject,
       user: users[userId]
     };
-
+    res.render('urls_index', templateVars);
   } else {
+    
     templateVars = {
-      urls: urlDatabase,
+      urls: undefined,
       user: undefined //users[userId]
     };
+    res.render('urls_index', templateVars);
+    
   }
  
   // console.log(templateVars.urls.b2xVn2);
-
-  res.render('urls_index', templateVars);
-
 });
 
 app.get("/hello", (req, res) => {
