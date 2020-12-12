@@ -94,6 +94,7 @@ const bodyParser = require("body-parser");
 const app = express();
 //const ejsLint = require('ejs-lint');
 let cookieParser = require('cookie-parser');
+const bcrypt = require('bcrypt');
 app.use(cookieParser());
 //const uuid = require('uuid/v8.3.2');
 const PORT = 8080; // default port 8080
@@ -260,9 +261,10 @@ app.post("/login", (req, res) => {
     } else {
       // email is valid and now need to check if passwords match (i.e what was entered vs. what was inside the database).
 
-      if(userObject.password === password){
+      if(bcrypt.compareSync(password, userObject.password)){
         // password is valid, and both conditions (email + password have been met). 
         // set the cookie to be user_id
+       
         res.cookie('user_id', userObject.id);
         // redirect to urls page
         res.redirect('/urls');
@@ -272,29 +274,9 @@ app.post("/login", (req, res) => {
 
       }
       
+      
     }
-  /*
-  const email = req.body.email;
-  let userExists = false;
-  // set cookie res.cookes.cookie("user_id", newUser.id);
- 
-  for (let user in users) {
-    // user is same as user.id because its the literal string value
-    // check if user already exists in the database, and get the value of it userID
-    if (users[user].email === email) {
-      res.cookie('user_id', user);
-      userExists = true;
-      break;
-    }
-  }
-  if (userExists) {
-    // redirect back to the /urls page
-    res.redirect('/urls');
-  } else {res.render('urls_index', templateVars);
-    res.redirect('/register');
-  }
- 
-  */
+
 });
 
 // Route for logout and to clear cookies
@@ -323,14 +305,15 @@ app.post("/register", (req, res) => {
     res.status(400).send("<h1>Status Error Code: 400 Bad Request. Password can not be empty, must be filled out.</h1>");
   } else {
     const userId = generateRandomString(8);
-  
+    // hash the password and store it
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
     // create object to store user's email and password values using the req.body values for input from ejs template
-    const userEmail = req.body.email;
-    const userPw = req.body.password;
+    const userEmail = req.body.email ;
+    //const userPw = req.body.password;
     const newUser = {
       id: userId,
       email: userEmail,
-      password: userPw
+      password: hashedPassword
     };
     // add new user object to the global users object
     users[userId] = newUser;
@@ -344,7 +327,7 @@ app.post("/register", (req, res) => {
     // redirect to the /urls page
     res.redirect("/urls");
   }
-
+  console.log("the user database now looks like with the hashed password stored: ", users);
 });
 
 // Get registration page
