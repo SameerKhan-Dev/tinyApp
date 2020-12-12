@@ -5,9 +5,9 @@
 
 const urlDatabase = {
 
-  "b2xVn2": "http://www.lighthouselabs.ca",
+  //"b2xVn2": "http://www.lighthouselabs.ca",
 
-  "9sm5xK": "http://www.google.com"
+  //"9sm5xK": "http://www.google.com"
 
 };
 // database of users intialize it to be empty
@@ -123,7 +123,7 @@ app.get("/urls/new", (req, res) => {
     };
     // templateVars is the object itself -- inside it the object: user_id has keys id:, email:, password.
   // inside ejs file can directly access id, email, password;
-  console.log("you have access because you are logged in!");
+  //console.log("you have access because you are logged in!");
   res.render('urls_new', templateVars);
 
   } else {
@@ -132,7 +132,7 @@ app.get("/urls/new", (req, res) => {
       user: undefined
     };
     // redirect to login page
-    console.log("you do not have access because you are not logged in, please login");
+    //console.log("you do not have access because you are not logged in, please login");
     res.render('urls_loginPage', templateVars);
   }
   //console.log("templateVars inside get --> /urls/new is", templateVars);
@@ -166,12 +166,15 @@ app.post('/urls', (req, res) => {
   // console.log(req.body);
   //res.send("Ok");
   // access the request body which contains the input data as per ejs file template
+
+  const userID = req.cookies['user_id'];
   const newLongURL = req.body.longURL;
   const shortURL = generateRandomString(6);
   // add the new key-value pair to the urlDatabase object
-  urlDatabase[shortURL] = newLongURL;
+  urlDatabase[shortURL] = { longURL: newLongURL, userID: userID};
   // redirect to
   //add status code 302
+  console.log("Urls database now looks like: ", urlDatabase);
   res.status(302);
   res.redirect(`/urls/${shortURL}`);
 
@@ -201,9 +204,19 @@ app.post("/urls/:shortURL", (req, res) => {
 
   //get the new long URL from the request body
   const newLongURL = req.body.newURL;
+  
+  for(let shortURLKey in urlDatabase){
+    if(shortURLKey === shortURL){
+      urlDatabase[shortURLKey]["longURL"] = newLongURL;
+
+    }
+
+  }
+  
+  
 
   // update database long URL
-  urlDatabase[shortURL] = newLongURL;
+  //urlDatabase[shortURL] = newLongURL;
   //console.log("newLongURL is: " , newLongURL);
   //console.log("shortURL is ", shortURL);
   // redirect to the url show page to display the updated url info
@@ -374,7 +387,8 @@ app.get("/u/:shortURL", (req, res) => {
   //
   // using the shortURL in the request, extract the longURL from the urlsDatabase object
   const shortURLID = req.params.shortURL;
-  const longURL = urlDatabase[shortURLID];
+  console.log(urlDatabase);
+  const longURL = urlDatabase[shortURLID]["longURL"];
   // redirect using longURL
   res.redirect(longURL);
 });
@@ -396,7 +410,7 @@ app.get("/urls/:shortURL", (req, res) => {
     shortURL: req.params.shortURL,
     // over here the variable longURL will be visible inside the HTML file
     // accessing the actual longURL
-    longURL : urlDatabase[req.params.shortURL],
+    longURL : urlDatabase[req.params.shortURL]["longURL"],
     // access the username if it exists as a cookie
     user: userObject // users[req.cookies["user_id"]]
   };
@@ -414,6 +428,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
 app.listen(PORT, () => {
 
+  
   console.log(`Example app listening on port ${PORT}!`);
 
 });
