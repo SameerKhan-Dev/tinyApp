@@ -197,14 +197,20 @@ app.get("/urls/new", (req, res) => {
 
 // receive a request to go to upload login page for rendering
 app.get("/login", (req, res) => {
-  const templateVars = {
-    // access the username if it exists as a cookie
-    user: undefined //users[req.cookies["user_id"]]
-  };
-  //res.clearCookie("user_id");
-  // render the login page
-  res.render('urls_loginPage.ejs',templateVars);
-
+  const user_id = req.session.user_id;
+  // check if user is logged in, if logged in the redirect to /urls page
+  if(user_id) {
+    // redirect to /urls page
+    res.redirect("/urls");
+  } else {
+    const templateVars = {
+      // access the username if it exists as a cookie
+      user: undefined //users[req.cookies["user_id"]]
+    };
+    //res.clearCookie("user_id");
+    // render the login page
+    res.render('urls_loginPage.ejs',templateVars);
+  }
 });
 
 // receive a post request and access the data to post
@@ -382,6 +388,7 @@ app.post("/register", (req, res) => {
     console.log("users Object now is",users);
     res.status(400).send("<h1>Status Error Code: 400 Bad Request. Password can not be empty, must be filled out.</h1>");
   } else {
+    console.log("submitted password is: ", req.body.password);
     const userId = generateRandomString(8);
     // hash the password and store it
     const hashedPassword = bcrypt.hashSync(req.body.password, 10);
@@ -393,6 +400,7 @@ app.post("/register", (req, res) => {
       email: userEmail,
       password: hashedPassword
     };
+    console.log("hashedPassword is: ", newUser.password);
     // add new user object to the global users object
     users[userId] = newUser;
    
@@ -412,13 +420,21 @@ app.post("/register", (req, res) => {
 app.get("/register", (req, res) => {
 
   //render the corresponding registration ejs template : urls_registration
+  let userID = req.session.user_id;
+  // check if user is logged in, and if logged in then redirect to /urls page. if not logged in, render login page
+  if(userID) {
 
-  const templateVars = {
-    // access the username if it exists as a cookie
-    user: undefined //users[req.cookies["user_id"]]
-  };
-  
-  res.render("urls_registration", templateVars);
+    res.redirect('/urls');
+
+  } else {
+    
+    const templateVars = {
+      // access the username if it exists as a cookie
+      user: undefined //users[req.cookies["user_id"]]
+    };
+    // user not logged so render login page
+    res.render("urls_registration", templateVars);
+  }
 });
 
 app.get("/urls", (req, res) => {
