@@ -5,8 +5,9 @@ The app has many features that allows for registering or viewing new urls that t
 
 ## Final Product
 
-!["screenshot description"](#)
-!["screenshot description"](#)
+!["Screenshot of URLs page"](https://github.com/SameerKhan-Dev/tinyApp/blob/master/docs/urls-page.png?raw=true)
+!["Screenshot of update URL page"](https://github.com/SameerKhan-Dev/tinyApp/blob/master/docs/create%20-%20new%20-%20url.png?raw=true)
+!["Screenshot of register page"](https://github.com/SameerKhan-Dev/tinyApp/blob/master/docs/register%20-%20page.png?raw=true)
 
 ## Dependencies
 
