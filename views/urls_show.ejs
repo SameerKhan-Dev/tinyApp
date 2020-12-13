@@ -10,23 +10,15 @@
 </header>
 <body>
   <div class="card text-center">
-      <div class="card-header"></div>
-      <div class="card-body">
-        <h5 class="card-title">TinyURL for: <%= longURL %></h5>
-        <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>
-       <!-- <a href='#''>Shorten a new URL!</a> -->
-       <!--
-          We start by extending the urls_show.ejs template to include a form with two elements – a text input and a button.
-          the form will submit using a POST request.
-          Add a form to the urls_show template that submits an updated long URL
-       -->
-      
-      
-        
-      </div>
+    <div class="card-header"></div>
+    <div class="card-body">
+      <h5 class="card-title">TinyURL for: <%= longURL %></h5>
+      <p class="card-text">Short URL: <a href="/u/<%= shortURL %>"><%= shortURL %></a></p>     
+    </div>
     <div class="card-footer text-muted"></div>
   </div>
   <h1 style="text-align: center">Edit</h1>
+  
   <div class = "form d-flex div-wrapper" style ="text-align: center"> 
     
     <form class="form-inline" style = "text-align: center; padding-left: 20px" action="/urls/<%= shortURL %>" method="POST" style=>

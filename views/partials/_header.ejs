@@ -11,19 +11,18 @@
       </div>
     </div>
 
-      <% if (user) { %>
-        <form action = "/logout" method = "POST">
-            <label>Logged in As: <%= user["email"] %></label>
-            <button type = "submit">Logout</button>
-        </form>
-      <% } else { %>
-        <form action = "/login" method = "GET">
-          <button type = "submit">Login</button>
-        </form>
-        <form action = "/register" method = "GET">
-          <button type = "submit">Register</button>
-        </form>   
+    <% if (user) { %>
+      <form action = "/logout" method = "POST">
+        <label>Logged in As: <%= user["email"] %></label>
+        <button type = "submit">Logout</button>
+      </form>
+    <% } else { %>
+      <form action = "/login" method = "GET">
+        <button type = "submit">Login</button>
+      </form>
+      <form action = "/register" method = "GET">
+        <button type = "submit">Register</button>
+       </form>   
       <% } %>
-  
   </nav>
 </header>
