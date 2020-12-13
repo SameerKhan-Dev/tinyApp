@@ -487,7 +487,7 @@ app.get("/urls", (req, res) => {
       urls: undefined,
       user: undefined //users[userId]
     };
-    res.render('urls_index', templateVars);
+    res.send("<h1>Error! To view URLs you must be logged in!</h1>");
   }
  
 });
