@@ -248,17 +248,29 @@ app.post("/urls/:shortURL/delete", (req , res) => {
   const shortURLID = req.params.shortURL;
   
   // delete URL resource from database
+  // first check if user is logged in else send an error message
   if(userId){
-    console.log("deleted fam!");
-    delete urlDatabase[shortURLID];
+    // console.log("deleted fam!");
+    // check if url belongs to user_id
+    let urlBelongs = urlChecker(userId, shortURLID);
+      if(urlBelongs === false) {
+        res.send("<h1>Error! Sorry you can not delete this URL as you are not the creator/owner of this link");
+      } else {
 
+        delete urlDatabase[shortURLID];
+        res.redirect("/urls");
+      }
+    
+  } else {
+    // send error message because user is not logged in
+    res.send("<h1>Error! To delete a url you must be logged in and must own the url</h1>");
   }
   /*
  
   console.log("shortURLID deleted:", shortURLID);
   console.log("Resulting URL Database is: ", urlDatabase);
   */
-  res.redirect("/urls");
+  
 });
 
 app.post("/urls/:shortURL", (req, res) => {
@@ -269,21 +281,40 @@ app.post("/urls/:shortURL", (req, res) => {
   let userID = req.session.user_id;
   //get the new long URL from the request body
   const newLongURL = req.body.newURL;
-  if(userID) {
-    for(let shortURLKey in urlDatabase){
-      if(shortURLKey === shortURL){
-        urlDatabase[shortURLKey]["longURL"] = newLongURL;
+
+  // check if user is owns the url for the given userID
+
   
-      }
-  
+    // check if userID is logged in 
+    if(userID) {
+
+        // check if the shortURL belongs to the existing logged in user
+      let urlBelongs = urlChecker(userID, shortURL);
+      if(urlBelongs === false) {
+        res.send("<h1>Error! Sorry you do not have access to this URL page on this app, as you are not the creator/owner of this link");
+      } else {
+      
+        for(let shortURLKey in urlDatabase){
+          if(shortURLKey === shortURL){
+            urlDatabase[shortURLKey]["longURL"] = newLongURL;
+      
+          }
+        }
+        // redirect to urls page
+        res.redirect('/urls');
+      } 
     }
-  }
-  // update database long URL
-  //urlDatabase[shortURL] = newLongURL;
-  //console.log("newLongURL is: " , newLongURL);
-  //console.log("shortURL is ", shortURL);
-  // redirect to the url show page to display the updated url info
-  res.redirect(`/urls/${shortURL}`);
+    // update database long URL
+    //urlDatabase[shortURL] = newLongURL;
+    //console.log("newLongURL is: " , newLongURL);
+    //console.log("shortURL is ", shortURL);
+    // redirect to the url show page to display the updated url info
+    //res.redirect(`/urls/${shortURL}`);
+
+    else {
+      // user is not logged in so send error message
+    res.send("Error! User not logged in so can not make changes to update URL!");
+    }
 });
 
 // Route for Login
