@@ -1,3 +1,26 @@
+
+const express = require("express");
+const bodyParser = require("body-parser");
+const app = express();
+//const ejsLint = require('ejs-lint');
+//let cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+const bcrypt = require('bcrypt');
+//app.use(cookieParser());
+const getUserByEmail = require('./helpers');
+app.use(cookieSession({
+  name: 'session',
+  keys: ['b6d0e7eb-8c4b-4ae4-8460-fd3a08733dcb', '1fb2d767-ffbf-41a6-98dd-86ac2da9392e']
+}))
+
+//const uuid = require('uuid/v8.3.2');
+const PORT = 8080; // default port 8080
+
+app.use(bodyParser.urlencoded({extended: true}));
+
+app.set("view engine", "ejs");
+
+
 // this object represents our database for now
 // this urlDatabase object will be used to keep track of all the URLS and their shortened forms
 // this is the data that we want to show on the URLS page.
@@ -40,15 +63,15 @@ const generateRandomString = function (stringLength) {
 // this function checks to see if the email submitted in registration form is valid or not
 // email is not valid if the email already exists and/or the email string is undefined or empty
 // if valid email, return true, else return false
-const emailChecker = function(email) {
+const emailChecker = function(email, usersObject) {
   let validEmail = true;
   if (email === "") {
       validEmail = false;
       return validEmail;
   }
   
-  let foundObject = emailFinder(email);
-  console.log("foundObject is ", foundObject);
+  let foundObject = getUserByEmail(email , usersObject);
+  //console.log("foundObject is ", foundObject);
   if (typeof foundObject === "undefined"){
     validEmail = true;
   } else {
@@ -57,20 +80,7 @@ const emailChecker = function(email) {
   return validEmail;
 };
 
-// returns empty object if email not found in users database
-// if email match found, returns the object
-const emailFinder = function(email){
-  
-  for (let userId in users) {
-    // email match found return the user object
-    if (users[userId].email === email) {
-      return users[userId];
-    }
-  }
-  // email not found
-  return undefined;
 
-}
 
 
 // This function returns all the urls where the userID is equal to the id of the currently logged-in user in an object format
@@ -89,27 +99,53 @@ const urlsForUser = function (id) {
   return resultsObj;
 };
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const app = express();
-//const ejsLint = require('ejs-lint');
-let cookieParser = require('cookie-parser');
-const bcrypt = require('bcrypt');
-app.use(cookieParser());
-//const uuid = require('uuid/v8.3.2');
-const PORT = 8080; // default port 8080
+// This function checks if given logged in-user with user_id created the URL that they are trying to access
+const urlChecker = function (user_id, shortURL) {
+  // obtain the urls that belong to the user
+  let userURLS = urlsForUser(user_id);
 
-app.use(bodyParser.urlencoded({extended: true}));
+  // iterate through the userUrls object to see if there is a match with the shortURL.
+  for (let key in userURLS){
 
-app.set("view engine", "ejs");
+    if(key === shortURL) {
+      // shortURL matches, so measn the inputted shortURL does belong to the current logged-in user.
+      return true;
 
+    }
+  }
+  // key match not found, so return false, meaning the inputted shortURL does not belong to the logged-in user
+  return false;
+}
 
+// this function checks if a given shortURL exists in the url database, if it doesn't exist, an error message is presented.
+const checkUrlExists = function (shortURL, urlDatabase) {
+  
+  // iterate through the urlDatabase to check if the short URL is valid / exists. Key is the shortURL keys.
+  for (let key in urlDatabase){
+
+    // check if key matches shortURL, return true if a match is found
+    if(key === shortURL){
+      return true;
+    }
+    
+  }
+  // shortURL not found, so return false;
+  return false;
+};
 
 // ROUTING WITH SPECIFIC PATHSewLongURL = req.body.longURL;
 // .get is a built in function that we calling here and supplying the callback function (req,res) to it.
 app.get("/", (req,res) => {
 
-  res.send("Hello!");
+  const user_id = req.session.user_id;
+
+  if (user_id) {
+    res.redirect("/urls");
+
+  } else {
+
+    res.redirect("/login");
+  }
 
 });
 /*
@@ -129,7 +165,8 @@ app.get("/urls.json", (req,res) => {
 // provide form to shorten a new url
 app.get("/urls/new", (req, res) => {
 
-  const user_id = req.cookies["user_id"];
+  //const user_id = req.cookies["user_id"];
+  const user_id = req.session.user_id;
   // render the urls_new page on the browser as a response. Form is provided to user.
   let templateVars = {};
   // if the user id exists then we send the actual user object to the ejs template
@@ -150,7 +187,8 @@ app.get("/urls/new", (req, res) => {
     };
     // redirect to login page
     //console.log("you do not have access because you are not logged in, please login");
-    res.render('urls_loginPage', templateVars);
+    //res.render('urls_loginPage', templateVars);
+    res.redirect("/login");
   }
   //console.log("templateVars inside get --> /urls/new is", templateVars);
  
@@ -163,7 +201,7 @@ app.get("/login", (req, res) => {
     // access the username if it exists as a cookie
     user: undefined //users[req.cookies["user_id"]]
   };
-  res.clearCookie("user_id");
+  //res.clearCookie("user_id");
   // render the login page
   res.render('urls_loginPage.ejs',templateVars);
 
@@ -179,24 +217,33 @@ app.post('/urls', (req, res) => {
   //res.send("Ok");
   // access the request body which contains the input data as per ejs file template
 
-  const userID = req.cookies['user_id'];
-  const newLongURL = req.body.longURL;
-  const shortURL = generateRandomString(6);
-  // add the new key-value pair to the urlDatabase object
-  urlDatabase[shortURL] = { longURL: newLongURL, userID: userID};
-  // redirect to
-  //add status code 302
-  console.log("Urls database now looks like: ", urlDatabase);
-  res.status(302);
-  res.redirect(`/urls/${shortURL}`);
+  //const userID = req.cookies['user_id'];
+  const userID = req.session.user_id;
 
-  
+  // check if user_id cookie session exists (i.e if user is logged in or not), if not logged in, send html error message
+  if (!userID){
+    res.send("<h1>Error! User not logged in. Please login to create a new url!</h1>");
+
+  } else {
+
+    const newLongURL = req.body.longURL;
+    const shortURL = generateRandomString(6);
+    // add the new key-value pair to the urlDatabase object
+    urlDatabase[shortURL] = { longURL: newLongURL, userID: userID};
+    // redirect to
+    //add status code 302
+    //console.log("Urls database now looks like: ", urlDatabase);
+    res.status(302);
+    res.redirect(`/urls/${shortURL}`);
+
+  }
 });
 
 // Post route that removes a URL resource
 app.post("/urls/:shortURL/delete", (req , res) => {
 
-  let userId = req.cookies["user_id"];
+  //let userId = req.cookies["user_id"];
+  let userId = req.session.user_id;
   // use Javascript's delete operator that removes a property from an object
   const shortURLID = req.params.shortURL;
   
@@ -206,9 +253,6 @@ app.post("/urls/:shortURL/delete", (req , res) => {
     delete urlDatabase[shortURLID];
 
   }
-
-  
-
   /*
  
   console.log("shortURLID deleted:", shortURLID);
@@ -221,7 +265,8 @@ app.post("/urls/:shortURL", (req, res) => {
 
   //get the short URL from the request body
   const shortURL = req.params.shortURL;
-  let userID = req.cookies["user_id"];
+  //let userID = req.cookies["user_id"];
+  let userID = req.session.user_id;
   //get the new long URL from the request body
   const newLongURL = req.body.newURL;
   if(userID) {
@@ -246,11 +291,11 @@ app.post("/login", (req, res) => {
 
     // access the req.body.username to get the value from the form and set it inside a cookie
   // check if email is valid if its not send a 404 status code error
-  let isValidEmail = emailChecker(req.body.email);
+  let isValidEmail = emailChecker(req.body.email, users);
 
   const email = req.body.email;
   const password = req.body.password;
-  const userObject = emailFinder(email);
+  const userObject = getUserByEmail(email , users);
   
     // if email is an empty string 
     if (email === ""){
@@ -264,9 +309,11 @@ app.post("/login", (req, res) => {
       if(bcrypt.compareSync(password, userObject.password)){
         // password is valid, and both conditions (email + password have been met). 
         // set the cookie to be user_id
-       
-        res.cookie('user_id', userObject.id);
+        console.log(`${userObject.id} is the userObject.id`);
+        //res.cookie('user_id', userObject.id);
+        req.session["user_id"] = userObject.id;
         // redirect to urls page
+       
         res.redirect('/urls');
       } else {
         // passwords do not match send a 403 error
@@ -284,9 +331,9 @@ app.post("/login", (req, res) => {
 app.post("/logout", (req,res) => {
 
   // clear the cookies and redirect to the urls page
-  res.clearCookie("user_id");
+  //res.clearCookie("user_id");
 
- 
+  req.session = null;
   // redirect to the main urls page
   res.redirect('/urls');
 
@@ -296,7 +343,7 @@ app.post("/logout", (req,res) => {
 app.post("/register", (req, res) => {
   console.log(users);
   // check if email is valid if its not send a 404 status code error
-  let isValidEmail = emailChecker(req.body.email);
+  let isValidEmail = emailChecker(req.body.email, users);
   if (isValidEmail === false){ 
     console.log("users Object now is",users);
     res.status(400).send("<h1>Status Error Code: 400 Bad Request. Email is already in use or an empty email address was submitted</h1>");
@@ -322,8 +369,8 @@ app.post("/register", (req, res) => {
     console.log(users);
   
     // after adding the user, set a user_id cookie containing the user's newly generated ID
-    res.cookie("user_id", newUser.id);
-    
+    //res.cookie("user_id", newUser.id);
+    req.session["user_id"] = newUser.id;
     // redirect to the /urls page
     res.redirect("/urls");
   }
@@ -355,11 +402,11 @@ app.get("/urls", (req, res) => {
     even if we are only sending one variable. This is so we can use the key of that variable
     (in the above case the key is urls) to access the data within our template.
   */
-  const userId = req.cookies['user_id'];
+  const userId = req.session.user_id;
   //const usernameValue = req.cookies;
   let templateVars = {};
   
-  console.log("req.cookies are:", req.cookies);
+ // console.log("req.cookies are:", req.cookies);
   if (userId) {
     let urlsObject = urlsForUser(userId);
     templateVars = {
@@ -381,16 +428,22 @@ app.get("/urls", (req, res) => {
   // console.log(templateVars.urls.b2xVn2);
 });
 
-app.get("/hello", (req, res) => {
-  // when sending html it creates the browser creates the corresponding html rendering for us on the screen
-  res.send("<html><body>Hello <b>World</</body></html>\n");
-});
+
 // redirecting short URLS to long URL versions
 app.get("/u/:shortURL", (req, res) => {
-  //
-  // using the shortURL in the request, extract the longURL from the urlsDatabase object
+
+  // extract shortURL from req.params
   const shortURLID = req.params.shortURL;
-  console.log(urlDatabase);
+  // check if shortURL exists inside the urls database, if it does not then return error html message
+  let urlExists = checkUrlExists(shortURLID, urlDatabase);
+  if (urlExists === false){
+
+    res.send("<h1>Error! URL does not exist inside database!");
+    
+  }
+  // check
+  //console.log(urlDatabase);
+   // using the shortURL in the request, extract the longURL from the urlsDatabase object
   const longURL = urlDatabase[shortURLID]["longURL"];
   // redirect using longURL
   res.redirect(longURL);
@@ -400,30 +453,56 @@ app.get("/u/:shortURL", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   //console.log("inside app.get urls/:shortURL....");
 
-  let user_id = req.cookies["user_id"];
-  let userObject;
-  if (user_id) {
-    userObject = users[user_id];
-  } else {
-    userObject = undefined;
+  let user_id = req.session.user_id;
+  // if user_id is not set return error.
+  if(!user_id) {
+    res.send("<h1>Error: not logged in!</h1>");
   }
-  
-  const templateVars = {
-    // over here the variable shortURL will be visible inside the HTML file
-    shortURL: req.params.shortURL,
-    // over here the variable longURL will be visible inside the HTML file
-    // accessing the actual longURL
-    longURL : urlDatabase[req.params.shortURL]["longURL"],
-    // access the username if it exists as a cookie
-    user: userObject // users[req.cookies["user_id"]]
-  };
-  //console.log("urlDatabase is: ", urlDatabase);
-  //console.log("req.params.shortURL is:", req.params.shortURL);
-  //console.log("templateVars is:", templateVars);
-  //console.log(templateVars.longURL);
+  // store the short url from the parameters in the request
+  let shortURL = req.params.shortURL;
 
-  // render the ejs template file into a html file
-  res.render("urls_show", templateVars);
+  // check if shortURL is valid, i.e exists inside the urlDatabase
+  let urlIsValid = checkUrlExists( shortURL, urlDatabase);
+  if (!urlIsValid) {
+
+    res.send("<h1>Error! Invalid short url! Does not exist in database!</h1>");
+  } else {
+
+
+    // check if the shortURL belongs to the existing logged in user
+    let urlBelongs = urlChecker(user_id, shortURL);
+    if(urlBelongs === false) {
+      res.send("<h1>Error! Sorry you do not have access to this URL page on this app, as you are not the creator/owner of this link");
+    }
+
+    let userObject;
+    if (user_id) {
+      userObject = users[user_id];
+    } else {
+      userObject = undefined;
+    }
+    
+    const templateVars = {
+      // over here the variable shortURL will be visible inside the HTML file
+      shortURL: shortURL,
+      // over here the variable longURL will be visible inside the HTML file
+      // accessing the actual longURL
+      longURL : urlDatabase[req.params.shortURL]["longURL"],
+      // access the username if it exists as a cookie
+      user: userObject // users[req.cookies["user_id"]]
+    };
+    //console.log("urlDatabase is: ", urlDatabase);
+    //console.log("req.params.shortURL is:", req.params.shortURL);
+    //console.log("templateVars is:", templateVars);
+    //console.log(templateVars.longURL);
+
+    // render the ejs template file into a html file
+    if(user_id){
+
+      res.render("urls_show", templateVars);
+
+    } 
+  }
 });
 
 
